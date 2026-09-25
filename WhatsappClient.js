@@ -31,16 +31,42 @@ const qrcodes = {}
 
 client.initialize().catch(err => console.log(err));
     
-    client.on("qr", (qr) => {
-        // console.log(qr)
-        qrcode.generate(qr, { small: true })
-        // const qr_image = qrimage.image(qr, { type: "png" });
-        // qr_image.pipe(fs.createWriteStream("./public/images/qr_" + id + ".png"));
-        // console.log("QR code generated");
+    client.on('qr', (qr) => {
+    const fs = require('fs');
+    const path = require('path');
+    
+    // Genera el código QR en texto básico para Render
+    qrcode.generate(qr, { small: true });
+    
+    // Creamos la página web limpia para que puedas escanear el QR desde el navegador
+    const htmlContent = `
+    <html>
+        <head>
+            <title>Vincular WhatsApp Nokia C6</title>
+            <meta http-equiv="refresh" content="10">
+            <style>
+                body { font-family: sans-serif; text-align: center; padding-top: 50px; background: #f0f2f5; }
+                .card { background: white; padding: 30px; display: inline-block; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+                pre { font-size: 10px; line-height: 8px; letter-spacing: -1px; font-family: monospace; background: white; padding: 20px; display: inline-block; white-space: pre; }
+            </style>
+        </head>
+        <body>
+            <div class="card">
+                <h2>Escanea este código con tu WhatsApp principal</h2>
+                <p>Si se ve un poco desalineado, ajusta el zoom de tu navegador presionando Ctrl y la rueda del raton.</p>
+                <pre>${qr}</pre>
+            </div>
+        </body>
+    </html>`;
+    
+    try {
+        fs.writeFileSync(path.join(__dirname, 'index.html'), htmlContent);
+        console.log("¡Pagina con codigo QR web generada con exito!");
+    } catch (err) {
+        console.error("Error al guardar index.html para QR:", err);
+    }
+});
 
-        // qrcodes[id] = qr;
-
-    })
     client.on("ready", () => {
 
         // authenticatedClients[id] = id;
