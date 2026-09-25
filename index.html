@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Conector WhatsApp - Nokia C6</title>
+    <!-- Esto hace que la página se refresque sola cada 5 segundos buscando el QR -->
+    <meta http-equiv="refresh" content="5">
+    <style>
+        body { font-family: sans-serif; text-align: center; padding-top: 80px; background: #f0f2f5; color: #333; }
+        .card { background: white; padding: 40px; display: inline-block; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 400px; }
+        .loader { border: 4px solid #f3f3f3; border-radius: 50%; border-top: 4px solid #25D366; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Generando código QR...</h2>
+        <p>El navegador de WhatsApp se está iniciando en Render. Esta página se actualizará automáticamente cuando el código esté listo.</p>
+        <div class="loader"></div>
+    </div>
+</body>
+</html>
