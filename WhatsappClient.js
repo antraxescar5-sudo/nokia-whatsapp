@@ -15,20 +15,22 @@ const qrcodes = {}
 
     const client = new Client({
         authStrategy: new LocalAuth({
-            clientId: 'local'
-        }),
-        puppeteer: { 
-            headless: true, 
-            // executablePath: '/usr/bin/google-chrome',
-            // executeablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-            // executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
-            args: [
-                 '--no-sandbox',
-            ]
-        },
-    })
+        clientId: 'local'
+    }),
+    puppeteer: {
+        headless: true,
+        // DESCOMENTADO: Esto le dice a Render que use su Chrome interno
+        executablePath: '/usr/bin/google-chrome', 
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-gpu'
+        ]
+    }
+});
 
-    client.initialize().catch(err => console.log(err))
+client.initialize().catch(err => console.log(err));
     
     client.on("qr", (qr) => {
         // console.log(qr)
