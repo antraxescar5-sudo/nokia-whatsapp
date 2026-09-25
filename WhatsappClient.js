@@ -37,48 +37,22 @@ const qrcodes = {}
 
 client.initialize().catch(err => console.log(err));
     
-    client.on('qr', (qr) => {
-    const fs = require('fs');
-    const path = require('path');
-    const QRCodeNode = require('qrcode'); // Asegúrate de tener esta librería instalada
+    // Variable global para almacenar el código QR en memoria
+global.latestQr = null;
 
-    // Convertimos el código de texto a una imagen Base64 real
-    QRCodeNode.toDataURL(qr, { errorCorrectionLevel: 'H', margin: 2 }, (err, url) => {
-        if (err) {
-            console.error("Error al generar imagen QR:", err);
-            return;
-        }
-
-        // Creamos la página web incrustando la imagen directamente
-        const htmlContent = `
-        <html>
-            <head>
-                <title>Vincular WhatsApp Nokia C6</title>
-                <meta http-equiv="refresh" content="15">
-                <style>
-                    body { font-family: sans-serif; text-align: center; padding-top: 50px; background: #f0f2f5; }
-                    .card { background: white; padding: 30px; display: inline-block; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-                    img { width: 300px; height: 300px; margin-top: 20px; }
-                </style>
-            </head>
-            <body>
-                <div class="card">
-                    <h2>Escanea este código con tu WhatsApp principal</h2>
-                    <p>Abre Dispositivos Vinculados en tu celular y apunta a la pantalla.</p>
-                    <img src="${url}" alt="Código QR de WhatsApp" />
-                </div>
-            </body>
-        </html>`;
-
-        try {
-            fs.writeFileSync(path.join(__dirname, 'index.html'), htmlContent);
-            console.log("¡Imagen QR web generada con éxito!");
-        } catch (fileErr) {
-            console.error("Error al guardar index.html:", fileErr);
-        }
-    });
+client.on('qr', (qr) => {
+    // Guardamos el código crudo en la variable global
+    global.latestQr = qr;
+    
+    // También lo pintamos en la consola de Render por si acaso
+    qrcode.generate(qr, { small: true });
+    console.log("¡Nuevo código QR recibido de WhatsApp!");
 });
 
+client.on('ready', () => {
+    global.latestQr = null; // Limpiamos el QR cuando ya esté conectado
+    console.log('¡El cliente de WhatsApp está completamente listo!');
+});
     client.on("ready", () => {
 
         // authenticatedClients[id] = id;

@@ -120,11 +120,45 @@ router.get('/status', async (req, res) => {
     }
 });
 
-// 6. Ruta para la Raíz (Corregida para que Render encuentre el archivo index.html)
-router.get('/', (req, res) => {
-    const path = require('path');
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
+// 6. Ruta raíz dinámica: Dibuja el QR directamente desde la memoria del servidor
+router.get('/', async (req, res) => {
+    // Si ya inició sesión y no hay QR, muestra un mensaje de éxito
+    if (!global.latestQr) {
+        return res.send(`
+            <html>
+                <head><title>WhatsApp Listo</title><meta http-equiv="refresh" content="10"></head>
+                <body style="font-family:sans-serif; text-align:center; padding-top:100px; background:#f0f2f5;">
+                    <div style="background:white; padding:40px; display:inline-block; border-radius:10px; box-shadow:0 4px 6px rgba(0,0,0,0.1);">
+                        <h2 style="color:#25D366;">¡WhatsApp Conectado Exitosamente!</h2>
+                        <p>Ya puedes abrir la aplicación en tu Nokia C6 para cargar tus contactos y chats.</p>
+                    </div>
+                </body>
+            </html>
+        `);
+    }
 
-// ¡ESTA ES LA LÍNEA QUE FALTA PARA ARREGLAR EL ERROR DE RENDER!
+    try {
+        // Usamos la librería qrcode para convertir el QR de memoria a imagen al instante
+        const QRCodeNode = require('qrcode');
+        const url = await QRCodeNode.toDataURL(global.latestQr, { errorCorrectionLevel: 'H', margin: 2 });
+
+        res.send(`
+            <html>
+                <head>
+                    <title>Vincular WhatsApp Nokia C6</title>
+                    <meta http-equiv="refresh" content="10">
+                </style>
+                <body style="font-family:sans-serif; text-align:center; padding-top:50px; background:#f0f2f5;">
+                    <div style="background:white; padding:30px; display:inline-block; border-radius:10px; box-shadow:0 4px 6px rgba(0,0,0,0.1);">
+                        <h2>Escanea este código con tu WhatsApp principal</h2>
+                        <p>Abre Dispositivos Vinculados en tu celular y apunta a la pantalla.</p>
+                        <img src="${url}" style="width:300px; height:300px; margin-top:20px;" alt="Código QR" />
+                    </div>
+                </body>
+            </html>
+        `);
+    } catch (err) {
+        res.status(500).send("Error generando el código QR en vivo: " + err.message);
+    }
+});
 module.exports = router;
