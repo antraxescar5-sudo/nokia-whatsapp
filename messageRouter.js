@@ -125,3 +125,6 @@ router.get('/', (req, res) => {
     const path = require('path');
     res.sendFile(path.join(__dirname, 'index.html'));
 });
+
+// ¡ESTA ES LA LÍNEA QUE FALTA PARA ARREGLAR EL ERROR DE RENDER!
+module.exports = router;
