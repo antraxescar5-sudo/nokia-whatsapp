@@ -50,32 +50,28 @@ router.get('/contacts', async (req, res) => {
     }
 });
 
-// 2. Ruta para los Chats / Conversaciones recientes (Versión ultra-limpia para Symbian)
+// 2. Ruta para los Chats optimizada al 100% para Qt Symbian
 router.get('/chats', async (req, res) => {
     try {
         const chats = await getAllChats();
         
-        // Mapeamos creando objetos completamente nuevos desde cero
         const cleanedChats = chats.map(chat => {
-            // Extraemos los textos de forma segura
             const idText = chat.id ? (typeof chat.id === 'object' ? chat.id._serialized : chat.id) : "";
-            const nameText = chat.name || "Chat sin nombre";
-            const messageText = chat.lastMessage || "";
-            const timeText = chat.timestamp || chat.date || "";
-
+            
             return {
-                id: String(idText),
-                name: cleanTextForSymbian(nameText),
-                lastMessage: cleanTextForSymbian(messageText),
-                timestamp: cleanTextForSymbian(String(timeText))
+                id: String(idText).trim(),
+                name: cleanTextForSymbian(chat.name || "Chat"),
+                lastMessage: cleanTextForSymbian(chat.lastMessage || ""),
+                timestamp: cleanTextForSymbian(String(chat.timestamp || ""))
             };
         });
         
-        // Mandamos la lista limpia en formato JSON
-        res.json(cleanedChats);
+        // Forzamos las cabeceras HTTP correctas que Qt requiere para interpretar JSON
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.status(200).send(JSON.stringify(cleanedChats));
     } catch (error) {
-        console.error("Error crítico en /chats:", error);
-        res.status(500).json({ error: "Error al obtener chats" });
+        console.error("Error Qt /chats:", error);
+        res.status(200).json([]); // Enviar array vacío en lugar de error 500 para que Qt no crashee
     }
 });
 
