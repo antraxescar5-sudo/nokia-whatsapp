@@ -18,7 +18,7 @@ const {
     uploadMedia, 
     getMessages, 
     listUsers 
-} = require("./whatsappClient");
+} = require("./WhatsappClient");
 
 // Función ultra estricta para Symbian: elimina emojis, stickers y caracteres raros
 const cleanTextForSymbian = (text) => {
