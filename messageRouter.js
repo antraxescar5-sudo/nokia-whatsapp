@@ -1,218 +1,121 @@
-
 const express = require('express');
-const router = new express.Router();
+const router = express.Router();
+const multer = require('multer');
+const upload = multer();
 
+// Importamos las funciones del cliente de WhatsApp
 const { 
-  startClient, sendMessage, isAuthenticated, 
-  getStatus, validate, getAllChats, getAllMessages, 
-  loginUser, getChats, getContacts, uploadMedia, getMessages, listUsers 
-} = require("./WhatsappClient")
+    startClient, 
+    sendMessage, 
+    isAuthenticated, 
+    getStatus, 
+    validate, 
+    getAllChats, 
+    getAllMessages, 
+    loginUser, 
+    getChats, 
+    getContacts, 
+    uploadMedia, 
+    getMessages, 
+    listUsers 
+} = require("./whatsappClient");
 
-const multer  = require('multer')
-const upload = multer()
-
-router.get('/', (req, res) => {
-  res.sendFile('/index.html', { root: __dirname });
-});
-
-// The below endpoint is only used by my website to allow users to download my WhatsApp application
-// It is not used by the J2ME WhatsApp client
-
-router.get('/download/:filename', function(req, res){
-    const file = `${__dirname}/${req.params.filename}`;
-    res.download(file); // Set disposition and send it.
-});
-
-router.get('/api/mediafile/:filename', function(req, res){
-
-    var filename = req.params.filename;
-    const regex = /;interface=wifi/i;
-    filename = filename.replace(regex, "");
-
-    const file = `${__dirname}/media/${filename}`;
-    res.download(file); // Set disposition and send it.
-});
-
-router.get('/login', (req, res) => {
-    res.sendFile('/login.html', { root: __dirname });
-});
-
-router.get("/login-status/:phoneNumber", (req, res) => {
-  res.json(getStatus(req.params.phoneNumber))
-});
-
-
-router.get('/:country/:phoneNumber/start', (req, res) => {
-
-  const result = validate(req.params.phoneNumber, req.params.country)
-  if(!result.valid) {
-    res.status(200).json(result)
-    return;
-  }
-  const formattedNumber = result.formatted.replace("+", "");
-
-  console.log(`Starting client for ${formattedNumber}`)
-
-  startClient(formattedNumber)
-  res.status(200).json({valid: true, formatted: formattedNumber})
-})
-
-// The below endpoint is called by the J2ME WhatsApp client to login to the app
-// :user is a path variable which will contain the mobile number of the user who is logging in
-// The string ';interface=wifi' gets added to the URL just to force BlackBerry (OS 6 and 7) devices to use WiFi
-
-router.get('/api/login/:user', async (req, res) => {
-    var mobileNumber = req.params.user;
-
-    const result = await loginUser(mobileNumber);
-
-    res.status(result.status).json(result.data);  
-
-});
-
-// The below endpoint is called by the J2ME WhatsApp client to list the Chats in the chats screen
-// The string ';interface=wifi' gets added to the URL just to force BlackBerry (OS 6 and 7) devices to use WiFi
-
-router.get('/api/chats/:receiver', async (req, res) => {
-    var receiver = req.params.receiver;
-
-    var pageSize = 30, page = 0;
-        
-    const regex = /;interface=wifi/i;
-
-    if(req.query.page_size !== undefined && req.query.page_size !== ''){
-        pageSize = req.query.page_size;
-        pageSize = pageSize.replace(regex, "");
-    }
-
-    if(req.query.page !== undefined && req.query.page !== ''){
-        page = req.query.page;
-        page = page.replace(regex, "");
-    }  
-
-    const result = await getChats(receiver, page, pageSize);
-
-    res.status(result.status).json(result.data);
-});
-
-router.get('/api/contacts/:user', async(req, res) => {
-
-    var mobileNumber = req.params.user;
-
-    var pageSize = 30, page = 0;
-    const regex = /;interface=wifi/i;
-    var searchTerm='';
-        
-    if(req.query.search_term !== undefined && req.query.search_term !== ''){
-        searchTerm = req.query.search_term;
-        searchTerm = searchTerm.replace(regex, "");
-    }
-
-    if(req.query.page_size !== undefined && req.query.page_size !== ''){
-        pageSize = req.query.page_size;
-        pageSize = pageSize.replace(regex, "");
-    }
-
-    if(req.query.page !== undefined && req.query.page !== ''){
-        page = req.query.page;
-        page = page.replace(regex, "");
-    }  
-
-    const result = await getContacts(mobileNumber, searchTerm, page, pageSize);
-
-    res.status(result.status).json(result.data); 
-
-});
-
-// The below endpoint is called by the J2ME WhatsApp client to fetch all the messages received by the logged in user from the selected sender
-// :receiver is the mobile number of the logged in user
-// :sender is the mobile number of the person who sent you the messages
-// The string ';interface=wifi' gets added to the URL just to force BlackBerry (OS 6 and 7) devices to use WiFi
-
-router.get('/api/messages/:receiver/:sender', async (req, res) => {
-
-    var pageSize = 30, page = 0;
-        
-     const regex = /;interface=wifi/i;
-        
-    if(req.query.page_size !== undefined && req.query.page_size !== ''){
-        pageSize = req.query.page_size;
-        pageSize = pageSize.replace(regex, "");
-    }
-
-    if(req.query.page !== undefined && req.query.page !== ''){
-        page = req.query.page;
-        page = page.replace(regex, "");
-    }  
-    var receiver = req.params.receiver;
-    var sender = req.params.sender;
-
-    const result = await getMessages(receiver, sender, page, pageSize);
-
-    res.status(result.status).json(result.data); 
-
-});
-
-router.post(['/api/messages','/api/messages/:id'], async (req, res) => {
-
-    const result = await sendMessage(req.body.sender, req.body.receiver, req.body.message);
-
-    res.status(result.status).json(result.data);
-});
-
-router.get('/api/allchats/:user', async(req, res) => {
-    var mobileNumber = req.params.user;
-
-    const result = await getAllChats(mobileNumber);
-
-    res.status(result.status).json(result.data);
-
-});
-
-router.get('/api/allmessages/:user/:chatId', async(req, res) => {
-    var mobileNumber = req.params.user;
-    var chatId = req.params.chatId;
-
-    const result = await getAllMessages(mobileNumber, chatId);
-
-    res.status(result.status).json(result.data);
-
-});
-
-router.post(['/api/upload/:id','/api/upload'], async (req, res) => {
-    try {
-
-        console.log(req.files);
-        console.log(`receiver = ${req.body.receiver}`);
-
-        // Get the file that was set to our field named "media"
-        const { media } = req.files;
-
-        // If no image submitted, exit
-        if (!media) return res.status(404).json({statusCode: '001', statusDesc: 'No image submitted'});
-
-        console.log(`media received: ${media.name}`);
-
-        const result = await uploadMedia(media, req.body.sender, req.body.receiver);
-
-        res.status(result.status).json(result.data);
-
-    } catch (error){
-        console.log(error);
-        res.status(500).json({statusCode: '003', statusDesc: error.message});
-    }
-
-});
-
-router.get('/listusers', async (req,res) =>{
+// Función ultra estricta para Symbian: elimina emojis, stickers y caracteres raros
+const cleanTextForSymbian = (text) => {
+    if (!text) return "";
     
-    // Reference to ClientInfo object:
-    // https://docs.wwebjs.dev/ClientInfo.html
+    // Convierte a string y elimina tildes/acentos que causen problemas de codificación
+    let clean = text.toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    
+    // Conserva SOLO letras, números, espacios y signos de puntuación básicos. Borra todo lo demás.
+    clean = clean.replace(/[^a-zA-Z0-9\s.,_\-+\(\)\/!@#$%\u00D1\u00F1]/g, "");
+    
+    return clean.trim();
+};
 
-    const result = await listUsers();
-
-    res.send(result);
-
+// 1. Ruta para los Contactos (Soluciona el error de "parsing contacts")
+router.get('/contacts', async (req, res) => {
+    try {
+        const contacts = await getContacts();
+        
+        const cleanedContacts = contacts.map(contact => ({
+            ...contact,
+            name: cleanTextForSymbian(contact.name || contact.pushname || contact.verifiedName || "Sin Nombre")
+        }));
+        
+        res.json(cleanedContacts);
+    } catch (error) {
+        console.error("Error en /contacts:", error);
+        res.status(500).json({ error: "Error al obtener contactos" });
+    }
 });
 
-module.exports = router
+// 2. Ruta para los Chats / Conversaciones recientes
+router.get('/chats', async (req, res) => {
+    try {
+        const chats = await getAllChats();
+        
+        const cleanedChats = chats.map(chat => ({
+            ...chat,
+            name: cleanTextForSymbian(chat.name),
+            lastMessage: cleanTextForSymbian(chat.lastMessage || "")
+        }));
+        
+        res.json(cleanedChats);
+    } catch (error) {
+        console.error("Error en /chats:", error);
+        res.status(500).json({ error: "Error al obtener chats" });
+    }
+});
+
+// 3. NUEVA: Ruta para obtener los mensajes de un chat específico
+router.get('/messages', async (req, res) => {
+    try {
+        const { chatId } = req.query; // Tu app suele enviar ?chatId=número
+        if (!chatId) return res.status(400).json({ error: "Falta el chatId" });
+
+        const messages = await getMessages(chatId);
+        
+        // Limpiamos el texto de cada mensaje recibido de WhatsApp para que no rompa el celular
+        const cleanedMessages = messages.map(msg => ({
+            ...msg,
+            body: cleanTextForSymbian(msg.body || "")
+        }));
+
+        res.json(cleanedMessages);
+    } catch (error) {
+        console.error("Error en /messages:", error);
+        res.status(500).json({ error: "Error al obtener mensajes" });
+    }
+});
+
+// 4. NUEVA: Ruta para enviar un mensaje desde el Nokia
+router.post('/send', upload.none(), async (req, res) => {
+    try {
+        const { to, message } = req.body; // Recibe el destinatario y el texto
+        if (!to || !message) return res.status(400).json({ error: "Falta destinatario o mensaje" });
+
+        await sendMessage(to, message);
+        res.json({ success: true, status: "Mensaje enviado" });
+    } catch (error) {
+        console.error("Error en /send:", error);
+        res.status(500).json({ error: "Error al enviar mensaje" });
+    }
+});
+
+// 5. NUEVA: Ruta para verificar el estado de conexión del cliente de WhatsApp
+router.get('/status', async (req, res) => {
+    try {
+        const status = await getStatus();
+        res.json({ status });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// 6. Ruta para la Raíz (Tu sitio web / descarga de la aplicación)
+router.get('/', (req, res) => {
+    res.sendFile('./index.html', { root: __dirname });
+});
+
+module.exports = router;
