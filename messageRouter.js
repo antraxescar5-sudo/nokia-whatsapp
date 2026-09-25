@@ -50,29 +50,31 @@ router.get('/contacts', async (req, res) => {
     }
 });
 
-// 2. Ruta para los Chats / Conversaciones recientes (Corregida para evitar errores de parsing)
+// 2. Ruta para los Chats / Conversaciones recientes (Versión ultra-limpia para Symbian)
 router.get('/chats', async (req, res) => {
     try {
         const chats = await getAllChats();
         
+        // Mapeamos creando objetos completamente nuevos desde cero sin heredar basura del cliente de WhatsApp
         const cleanedChats = chats.map(chat => {
-            // Aseguramos que existan strings válidos antes de limpiar o enviar
-            const rawName = chat.name || chat.id || "Chat sin nombre";
-            const rawMessage = chat.lastMessage || "";
-            const rawTimestamp = chat.timestamp || chat.date || "";
+            // Extraemos los textos de forma segura
+            const idText = chat.id ? (typeof chat.id === 'object' ? chat.id._serialized : chat.id) : "";
+            const nameText = chat.name || "Chat sin nombre";
+            const messageText = chat.lastMessage || "";
+            const timeText = chat.timestamp || chat.date || "";
 
             return {
-                ...chat,
-                id: chat.id ? chat.id.toString() : "",
-                name: cleanTextForSymbian(rawName),
-                lastMessage: cleanTextForSymbian(rawMessage),
-                timestamp: cleanTextForSymbian(rawTimestamp) // Limpiamos también la fecha por si tiene caracteres raros
+                id: String(idText),
+                name: cleanTextForSymbian(nameName = nameText),
+                lastMessage: cleanTextForSymbian(messageText),
+                timestamp: cleanTextForSymbian(String(timeText))
             };
         });
         
+        // Mandamos la lista limpia
         res.json(cleanedChats);
     } catch (error) {
-        console.error("Error en /chats:", error);
+        console.error("Error crítico en /chats:", error);
         res.status(500).json({ error: "Error al obtener chats" });
     }
 });
