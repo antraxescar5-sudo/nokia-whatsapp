@@ -19,12 +19,18 @@ const qrcodes = {}
     }),
     puppeteer: {
         headless: true,
-        // Eliminamos la ruta fija de /usr/bin y dejamos que Puppeteer busque su ejecutable local
+        // Agregamos argumentos avanzados para deshabilitar procesos pesados en la nube
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
             '--disable-dev-shm-usage',
-            '--disable-gpu'
+            '--disable-gpu',
+            '--no-first-run',
+            '--no-zygote',
+            '--single-process',
+            '--disable-extensions',
+            '--disable-default-apps',
+            '--font-render-hinting=none' // Evita que intente renderizar fuentes complejas
         ]
     }
 });
