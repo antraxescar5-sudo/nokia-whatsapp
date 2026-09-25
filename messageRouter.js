@@ -120,9 +120,8 @@ router.get('/status', async (req, res) => {
     }
 });
 
-// 6. Ruta para la Raíz (Tu sitio web / descarga de la aplicación)
+// 6. Ruta para la Raíz (Corregida para que Render encuentre el archivo index.html)
 router.get('/', (req, res) => {
-    res.sendFile('./index.html', { root: __dirname });
+    const path = require('path');
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
-
-module.exports = router;

@@ -19,8 +19,7 @@ const qrcodes = {}
     }),
     puppeteer: {
         headless: true,
-        // DESCOMENTADO: Esto le dice a Render que use su Chrome interno
-        executablePath: '/usr/bin/google-chrome', 
+        // Eliminamos la ruta fija de /usr/bin y dejamos que Puppeteer busque su ejecutable local
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
