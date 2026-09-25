@@ -55,7 +55,7 @@ router.get('/chats', async (req, res) => {
     try {
         const chats = await getAllChats();
         
-        // Mapeamos creando objetos completamente nuevos desde cero sin heredar basura del cliente de WhatsApp
+        // Mapeamos creando objetos completamente nuevos desde cero
         const cleanedChats = chats.map(chat => {
             // Extraemos los textos de forma segura
             const idText = chat.id ? (typeof chat.id === 'object' ? chat.id._serialized : chat.id) : "";
@@ -65,13 +65,13 @@ router.get('/chats', async (req, res) => {
 
             return {
                 id: String(idText),
-                name: cleanTextForSymbian(nameName = nameText),
+                name: cleanTextForSymbian(nameText),
                 lastMessage: cleanTextForSymbian(messageText),
                 timestamp: cleanTextForSymbian(String(timeText))
             };
         });
         
-        // Mandamos la lista limpia
+        // Mandamos la lista limpia en formato JSON
         res.json(cleanedChats);
     } catch (error) {
         console.error("Error crítico en /chats:", error);
