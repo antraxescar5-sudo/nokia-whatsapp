@@ -13,13 +13,20 @@ const authenticatedClients = {}
 const qrcodes = {}
 
 
-    const client = new Client({
-        authStrategy: new LocalAuth({
+    // Variable global para almacenar el código QR en memoria
+global.latestQr = null;
+
+const client = new Client({
+    authStrategy: new LocalAuth({
         clientId: 'local'
     }),
+    // Opciones avanzadas de WhatsApp Web para no saturar servidores pequeños
+    webVersionCache: {
+        type: 'remote',
+        remotePath: 'https://githubusercontent.com',
+    },
     puppeteer: {
         headless: true,
-        // Agregamos argumentos avanzados para deshabilitar procesos pesados en la nube
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -29,10 +36,20 @@ const qrcodes = {}
             '--no-zygote',
             '--single-process',
             '--disable-extensions',
-            '--disable-default-apps',
-            '--font-render-hinting=none' // Evita que intente renderizar fuentes complejas
+            '--js-flags="--max-old-space-size=256"' // 🔥 Obliga a Chrome a no usar más de 256MB de RAM
         ]
     }
+});
+
+client.on('qr', (qr) => {
+    global.latestQr = qr;
+    qrcode.generate(qr, { small: true });
+    console.log("¡Nuevo código QR recibido de WhatsApp!");
+});
+
+client.on('ready', () => {
+    global.latestQr = null; 
+    console.log('¡El cliente de WhatsApp está completamente listo!');
 });
 
 client.initialize().catch(err => console.log(err));
