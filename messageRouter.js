@@ -50,16 +50,25 @@ router.get('/contacts', async (req, res) => {
     }
 });
 
-// 2. Ruta para los Chats / Conversaciones recientes
+// 2. Ruta para los Chats / Conversaciones recientes (Corregida para evitar errores de parsing)
 router.get('/chats', async (req, res) => {
     try {
         const chats = await getAllChats();
         
-        const cleanedChats = chats.map(chat => ({
-            ...chat,
-            name: cleanTextForSymbian(chat.name),
-            lastMessage: cleanTextForSymbian(chat.lastMessage || "")
-        }));
+        const cleanedChats = chats.map(chat => {
+            // Aseguramos que existan strings válidos antes de limpiar o enviar
+            const rawName = chat.name || chat.id || "Chat sin nombre";
+            const rawMessage = chat.lastMessage || "";
+            const rawTimestamp = chat.timestamp || chat.date || "";
+
+            return {
+                ...chat,
+                id: chat.id ? chat.id.toString() : "",
+                name: cleanTextForSymbian(rawName),
+                lastMessage: cleanTextForSymbian(rawMessage),
+                timestamp: cleanTextForSymbian(rawTimestamp) // Limpiamos también la fecha por si tiene caracteres raros
+            };
+        });
         
         res.json(cleanedChats);
     } catch (error) {
