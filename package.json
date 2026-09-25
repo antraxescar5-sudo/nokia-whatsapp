@@ -1,12 +1,15 @@
 {
   "name": "whatsapp-interceptor",
   "version": "1.0.0",
+  "engines": {
+    "node": "20.11.0"
+  },
   "description": "WhatsApp Interceptor",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "dev": "env-cmd .env nodemon index.js",
-    "start": "env-cmd .env node index.js"
-  },
+    "start": "env-cmd .env node server.js"                                           
+  },                                                                 
   "author": "Christopher Gomes",
   "license": "ISC",
   "dependencies": {
