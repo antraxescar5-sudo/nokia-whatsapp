@@ -34,37 +34,43 @@ client.initialize().catch(err => console.log(err));
     client.on('qr', (qr) => {
     const fs = require('fs');
     const path = require('path');
-    
-    // Genera el código QR en texto básico para Render
-    qrcode.generate(qr, { small: true });
-    
-    // Creamos la página web limpia para que puedas escanear el QR desde el navegador
-    const htmlContent = `
-    <html>
-        <head>
-            <title>Vincular WhatsApp Nokia C6</title>
-            <meta http-equiv="refresh" content="10">
-            <style>
-                body { font-family: sans-serif; text-align: center; padding-top: 50px; background: #f0f2f5; }
-                .card { background: white; padding: 30px; display: inline-block; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-                pre { font-size: 10px; line-height: 8px; letter-spacing: -1px; font-family: monospace; background: white; padding: 20px; display: inline-block; white-space: pre; }
-            </style>
-        </head>
-        <body>
-            <div class="card">
-                <h2>Escanea este código con tu WhatsApp principal</h2>
-                <p>Si se ve un poco desalineado, ajusta el zoom de tu navegador presionando Ctrl y la rueda del raton.</p>
-                <pre>${qr}</pre>
-            </div>
-        </body>
-    </html>`;
-    
-    try {
-        fs.writeFileSync(path.join(__dirname, 'index.html'), htmlContent);
-        console.log("¡Pagina con codigo QR web generada con exito!");
-    } catch (err) {
-        console.error("Error al guardar index.html para QR:", err);
-    }
+    const QRCodeNode = require('qrcode'); // Asegúrate de tener esta librería instalada
+
+    // Convertimos el código de texto a una imagen Base64 real
+    QRCodeNode.toDataURL(qr, { errorCorrectionLevel: 'H', margin: 2 }, (err, url) => {
+        if (err) {
+            console.error("Error al generar imagen QR:", err);
+            return;
+        }
+
+        // Creamos la página web incrustando la imagen directamente
+        const htmlContent = `
+        <html>
+            <head>
+                <title>Vincular WhatsApp Nokia C6</title>
+                <meta http-equiv="refresh" content="15">
+                <style>
+                    body { font-family: sans-serif; text-align: center; padding-top: 50px; background: #f0f2f5; }
+                    .card { background: white; padding: 30px; display: inline-block; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+                    img { width: 300px; height: 300px; margin-top: 20px; }
+                </style>
+            </head>
+            <body>
+                <div class="card">
+                    <h2>Escanea este código con tu WhatsApp principal</h2>
+                    <p>Abre Dispositivos Vinculados en tu celular y apunta a la pantalla.</p>
+                    <img src="${url}" alt="Código QR de WhatsApp" />
+                </div>
+            </body>
+        </html>`;
+
+        try {
+            fs.writeFileSync(path.join(__dirname, 'index.html'), htmlContent);
+            console.log("¡Imagen QR web generada con éxito!");
+        } catch (fileErr) {
+            console.error("Error al guardar index.html:", fileErr);
+        }
+    });
 });
 
     client.on("ready", () => {
